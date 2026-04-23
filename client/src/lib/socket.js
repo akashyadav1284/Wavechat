@@ -6,7 +6,9 @@ export const connectSocket = (userId) => {
   // If a socket already exists AND is connected, do nothing
   if (socket?.connected) return;
 
-  const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "/";
+  // Dev: localhost:5000 | Prod: VITE_BACKEND_URL (your Render URL)
+  const BASE_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   // Disconnect stale socket before creating a fresh one
   if (socket) {
