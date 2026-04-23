@@ -1,0 +1,56 @@
+# ============================================
+#   WaveChat — .gitignore (Security Hardened)
+# ============================================
+
+# ── Node Dependencies ────────────────────────
+node_modules/
+**/node_modules/
+
+# ── Environment ────
+.env
+.env.*
+!.env.example
+*.env
+
+# ── Build Output ─────────────────────────────
+client/dist/
+client/build/
+
+# ── Logs ─────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+
+# ── OS Files ─────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── IDE / Editor ─────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── Uploads / User Content ───────────────────
+server/uploads/
+
+# ── Temporary / Migration files ──────────────
+*.mjs.tmp
+migrate.mjs
+mongo_backup/
+
+# ── Cache ────────────────────────────────────
+.cache/
+.parcel-cache/
+.vite/
+
+# ── Lock files (optional — keep for reproducibility) ──
+# package-lock.json
+# yarn.lock

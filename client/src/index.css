@@ -1,0 +1,192 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   WaveChat — Premium Liquid Glass Design System
+   ============================================ */
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    background: #0F1115; /* Deep dark grey */
+    color: #FAFAFA;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+}
+
+@layer components {
+  /* --- Glassmorphism Cards --- */
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(24px) saturate(1.5);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .glass-dark {
+    background: rgba(15, 17, 21, 0.6);
+    backdrop-filter: blur(40px) saturate(1.2);
+    -webkit-backdrop-filter: blur(40px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow:
+      0 16px 48px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  }
+
+  .glass-light {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-input {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-input:focus {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.05), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    outline: none;
+  }
+
+  /* --- Glow Effects --- */
+  .glow {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+  }
+
+  .glow-hover:hover {
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.2), 0 0 60px rgba(255, 255, 255, 0.05);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+
+  /* --- Message Bubbles --- */
+  .msg-sent {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  .msg-received {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  /* --- Ripple Effect --- */
+  .ripple-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    transform: scale(0);
+    animation: ripple 0.6s ease-out forwards;
+    pointer-events: none;
+  }
+
+  /* --- Online Indicator --- */
+  .online-dot {
+    width: 10px;
+    height: 10px;
+    background: #10B981; /* Emerald 500 */
+    border-radius: 50%;
+    border: 2px solid #0F1115;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+
+  .online-dot-sm {
+    width: 8px;
+    height: 8px;
+  }
+
+  /* --- Skeleton Loading --- */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.02) 25%,
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(255, 255, 255, 0.02) 75%
+    );
+    background-size: 400% 100%;
+    animation: shimmer 2s infinite linear;
+    border-radius: 8px;
+  }
+
+  /* --- Scrollbar --- */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* --- Wave Background --- */
+  .wave-bg-gradient {
+    background: linear-gradient(
+      135deg,
+      #0F1115 0%,
+      #18181B 25%,
+      #27272A 50%,
+      #18181B 75%,
+      #0F1115 100%
+    );
+    background-size: 400% 400%;
+    animation: meshBg 20s ease-in-out infinite;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #FFFFFF, #A1A1AA, #52525B);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .border-gradient {
+    border-image: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.02)) 1;
+  }
+}
