@@ -59,12 +59,16 @@ io.on("connection", (socket) => {
     // Broadcast updated online users to ALL clients
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
-    // Also send directly back to this socket in case the broadcast
-    // was emitted before the client-side listener was registered (race condition)
+    // Also send directly back to this socket (handles race condition)
     socket.emit("getOnlineUsers", Object.keys(userSocketMap));
   }
 
-  // Typing events
+  // Client can request the current online users list at any time
+  // (used after listener is set up to avoid race conditions)
+  socket.on("requestOnlineUsers", () => {
+    socket.emit("getOnlineUsers", Object.keys(userSocketMap));
+  });
+
   socket.on("typing", ({ to }) => {
     const receiverSocketId = userSocketMap[to];
     if (receiverSocketId) {

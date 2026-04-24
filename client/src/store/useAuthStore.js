@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import axiosInstance from "../lib/axios";
 import toast from "react-hot-toast";
-import { connectSocket, disconnectSocket, getSocket } from "../lib/socket";
+import { connectSocket, disconnectSocket } from "../lib/socket";
 
 const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -11,24 +11,14 @@ const useAuthStore = create((set, get) => ({
   isCheckingAuth: true,
   onlineUsers: [],
 
-  _setupSocketListeners: () => {
-    const socket = getSocket();
-    if (!socket) return;
-
-    // Remove existing listener to avoid duplicates before re-adding
-    socket.off("getOnlineUsers");
-    socket.on("getOnlineUsers", (users) => {
-      set({ onlineUsers: users });
-    });
-  },
+  // Callback passed to socket — updates onlineUsers state when server broadcasts
+  _onOnlineUsers: (users) => set({ onlineUsers: users }),
 
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check");
       set({ authUser: res.data });
-      connectSocket(res.data._id);
-      // Set up listener immediately after socket connects
-      setTimeout(() => get()._setupSocketListeners(), 0);
+      connectSocket(res.data._id, get()._onOnlineUsers);
     } catch (error) {
       console.log("Not authenticated");
       set({ authUser: null });
@@ -41,12 +31,10 @@ const useAuthStore = create((set, get) => ({
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", data);
-      // Save token for cross-origin Bearer auth
       if (res.data.token) localStorage.setItem("wavechat_token", res.data.token);
       set({ authUser: res.data });
       toast.success("Welcome to WaveChat! 🌊");
-      connectSocket(res.data._id);
-      setTimeout(() => get()._setupSocketListeners(), 0);
+      connectSocket(res.data._id, get()._onOnlineUsers);
     } catch (error) {
       toast.error(error.response?.data?.message || "Signup failed");
     } finally {
@@ -58,12 +46,10 @@ const useAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
-      // Save token for cross-origin Bearer auth
       if (res.data.token) localStorage.setItem("wavechat_token", res.data.token);
       set({ authUser: res.data });
       toast.success("Welcome back! 🌊");
-      connectSocket(res.data._id);
-      setTimeout(() => get()._setupSocketListeners(), 0);
+      connectSocket(res.data._id, get()._onOnlineUsers);
     } catch (error) {
       toast.error(error.response?.data?.message || "Login failed");
     } finally {
@@ -74,7 +60,7 @@ const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       await axiosInstance.post("/auth/logout");
-      localStorage.removeItem("wavechat_token"); // Clear stored token
+      localStorage.removeItem("wavechat_token");
       set({ authUser: null, onlineUsers: [] });
       toast.success("Logged out successfully");
       disconnectSocket();
@@ -97,9 +83,7 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  setOnlineUsers: (users) => {
-    set({ onlineUsers: users });
-  },
+  setOnlineUsers: (users) => set({ onlineUsers: users }),
 }));
 
 export default useAuthStore;
