@@ -20,21 +20,16 @@ const App = () => {
     checkAuth();
   }, [checkAuth]);
 
-  // Set up ALL socket listeners once after auth is confirmed
+  // Register ALL socket event listeners when user is authenticated.
+  // Listeners are registered directly on the socket object — this works
+  // even before the socket is connected. Socket.io queues them internally.
   useEffect(() => {
     if (!authUser) return;
 
-    // Poll for the socket object — it may not be created immediately after checkAuth
-    let attempts = 0;
-    const interval = setInterval(() => {
+    // Wait briefly for connectSocket() to create the socket instance
+    const timer = setTimeout(() => {
       const socket = getSocket();
-      attempts++;
-      if (!socket || attempts > 20) {
-        clearInterval(interval);
-        return;
-      }
-
-      clearInterval(interval);
+      if (!socket) return;
 
       const {
         handleIncomingCall,
@@ -44,55 +39,49 @@ const App = () => {
         handleCallRejected,
       } = useCallStore.getState();
 
-      const setupListeners = () => {
-        // Remove old listeners to avoid duplicates on reconnect
-        socket.off("getOnlineUsers");
-        socket.off("incomingCall");
-        socket.off("callAccepted");
-        socket.off("iceCandidate");
-        socket.off("callEnded");
-        socket.off("callRejected");
+      // ─── Online Status ───────────────────────────────────────────
+      socket.on("getOnlineUsers", (users) => {
+        setOnlineUsers(users);
+      });
 
-        // Online users
-        socket.on("getOnlineUsers", (users) => setOnlineUsers(users));
+      // ─── WebRTC Call Signaling ───────────────────────────────────
+      socket.on("incomingCall",  handleIncomingCall);
+      socket.on("callAccepted",  handleCallAccepted);
+      socket.on("iceCandidate",  handleIceCandidate);
+      socket.on("callEnded",     handleCallEnded);
+      socket.on("callRejected",  handleCallRejected);
 
-        // Call signaling
-        socket.on("incomingCall", handleIncomingCall);
-        socket.on("callAccepted", handleCallAccepted);
-        socket.on("iceCandidate", handleIceCandidate);
-        socket.on("callEnded", handleCallEnded);
-        socket.on("callRejected", handleCallRejected);
-
-        // Request current online users
+      // ─── On (re)connect: request fresh online users ──────────────
+      // This handles server restarts (Render free tier) and reconnects
+      const onConnect = () => {
+        console.log("🔌 Socket connected, requesting online users...");
         socket.emit("requestOnlineUsers");
-
-        console.log("✅ All socket listeners registered");
       };
 
-      // If already connected, set up immediately
+      socket.on("connect", onConnect);
+
+      // If already connected when this effect runs, request immediately
       if (socket.connected) {
-        setupListeners();
+        socket.emit("requestOnlineUsers");
       }
 
-      // Re-setup listeners on every (re)connect
-      socket.on("connect", setupListeners);
-    }, 200); // Check every 200ms
+      console.log("✅ Socket listeners registered for:", authUser.name);
+    }, 300);
 
     return () => {
-      clearInterval(interval);
+      clearTimeout(timer);
       const socket = getSocket();
       if (socket) {
-        socket.off("connect");
         socket.off("getOnlineUsers");
         socket.off("incomingCall");
         socket.off("callAccepted");
         socket.off("iceCandidate");
         socket.off("callEnded");
         socket.off("callRejected");
+        socket.off("connect");
       }
     };
   }, [authUser, setOnlineUsers]);
-
 
   // Loading screen
   if (isCheckingAuth) {
@@ -121,7 +110,7 @@ const App = () => {
         toastOptions={{
           duration: 3000,
           style: {
-            background: "rgba(24, 24, 27, 0.9)", // zinc-900
+            background: "rgba(24, 24, 27, 0.9)",
             color: "#FAFAFA",
             backdropFilter: "blur(16px)",
             border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -130,41 +119,20 @@ const App = () => {
             boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
           },
           success: {
-            iconTheme: {
-              primary: "#FFFFFF",
-              secondary: "#18181B",
-            },
+            iconTheme: { primary: "#FFFFFF", secondary: "#18181B" },
           },
           error: {
-            iconTheme: {
-              primary: "#ef4444",
-              secondary: "#18181B",
-            },
+            iconTheme: { primary: "#ef4444", secondary: "#18181B" },
           },
         }}
       />
 
       <AnimatePresence mode="wait">
         <Routes>
-          <Route
-            path="/"
-            element={
-              !authUser ? <LandingPage /> : <Navigate to="/chat" />
-            }
-          />
-          <Route
-            path="/chat"
-            element={
-              authUser ? <ChatPage /> : <Navigate to="/" />
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              authUser ? <ProfilePage /> : <Navigate to="/" />
-            }
-          />
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="/"       element={!authUser ? <LandingPage /> : <Navigate to="/chat" />} />
+          <Route path="/chat"   element={authUser  ? <ChatPage />   : <Navigate to="/" />} />
+          <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/" />} />
+          <Route path="*"       element={<Navigate to="/" />} />
         </Routes>
       </AnimatePresence>
     </div>

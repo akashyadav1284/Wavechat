@@ -8,7 +8,8 @@ import LoadingSkeleton from "../ui/LoadingSkeleton";
 
 const Sidebar = () => {
   const { users, getUsers, isUsersLoading, selectedUser, setSelectedUser, searchUsers, searchResults, isSearching, clearSearch } = useChatStore();
-  const { onlineUsers } = useAuthStore();
+  const { onlineUsers, authUser } = useAuthStore();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
@@ -44,7 +45,7 @@ const Sidebar = () => {
             Messages
           </h2>
           <span className="text-xs font-medium text-zinc-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded-full">
-            {onlineUsers.length - 1 > 0 ? onlineUsers.length - 1 : 0} online
+            {onlineUsers.filter(id => id !== authUser?._id).length} online
           </span>
         </div>
 
