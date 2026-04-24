@@ -20,51 +20,79 @@ const App = () => {
     checkAuth();
   }, [checkAuth]);
 
-  // Listen for online users updates
+  // Set up ALL socket listeners once after auth is confirmed
   useEffect(() => {
     if (!authUser) return;
 
-    const socket = getSocket();
-    if (!socket) return;
+    // Poll for the socket object — it may not be created immediately after checkAuth
+    let attempts = 0;
+    const interval = setInterval(() => {
+      const socket = getSocket();
+      attempts++;
+      if (!socket || attempts > 20) {
+        clearInterval(interval);
+        return;
+      }
 
-    socket.on("getOnlineUsers", (users) => {
-      setOnlineUsers(users);
-    });
+      clearInterval(interval);
+
+      const {
+        handleIncomingCall,
+        handleCallAccepted,
+        handleIceCandidate,
+        handleCallEnded,
+        handleCallRejected,
+      } = useCallStore.getState();
+
+      const setupListeners = () => {
+        // Remove old listeners to avoid duplicates on reconnect
+        socket.off("getOnlineUsers");
+        socket.off("incomingCall");
+        socket.off("callAccepted");
+        socket.off("iceCandidate");
+        socket.off("callEnded");
+        socket.off("callRejected");
+
+        // Online users
+        socket.on("getOnlineUsers", (users) => setOnlineUsers(users));
+
+        // Call signaling
+        socket.on("incomingCall", handleIncomingCall);
+        socket.on("callAccepted", handleCallAccepted);
+        socket.on("iceCandidate", handleIceCandidate);
+        socket.on("callEnded", handleCallEnded);
+        socket.on("callRejected", handleCallRejected);
+
+        // Request current online users
+        socket.emit("requestOnlineUsers");
+
+        console.log("✅ All socket listeners registered");
+      };
+
+      // If already connected, set up immediately
+      if (socket.connected) {
+        setupListeners();
+      }
+
+      // Re-setup listeners on every (re)connect
+      socket.on("connect", setupListeners);
+    }, 200); // Check every 200ms
 
     return () => {
-      socket.off("getOnlineUsers");
+      clearInterval(interval);
+      const socket = getSocket();
+      if (socket) {
+        socket.off("connect");
+        socket.off("getOnlineUsers");
+        socket.off("incomingCall");
+        socket.off("callAccepted");
+        socket.off("iceCandidate");
+        socket.off("callEnded");
+        socket.off("callRejected");
+      }
     };
   }, [authUser, setOnlineUsers]);
 
-  // Listen for WebRTC Signaling Events
-  useEffect(() => {
-    if (!authUser) return;
-
-    const socket = getSocket();
-    if (!socket) return;
-
-    const {
-      handleIncomingCall,
-      handleCallAccepted,
-      handleIceCandidate,
-      handleCallEnded,
-      handleCallRejected,
-    } = useCallStore.getState();
-
-    socket.on("incomingCall", handleIncomingCall);
-    socket.on("callAccepted", handleCallAccepted);
-    socket.on("iceCandidate", handleIceCandidate);
-    socket.on("callEnded", handleCallEnded);
-    socket.on("callRejected", handleCallRejected);
-
-    return () => {
-      socket.off("incomingCall", handleIncomingCall);
-      socket.off("callAccepted", handleCallAccepted);
-      socket.off("iceCandidate", handleIceCandidate);
-      socket.off("callEnded", handleCallEnded);
-      socket.off("callRejected", handleCallRejected);
-    };
-  }, [authUser]);
 
   // Loading screen
   if (isCheckingAuth) {

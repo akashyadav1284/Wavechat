@@ -3,7 +3,7 @@ import axiosInstance from "../lib/axios";
 import toast from "react-hot-toast";
 import { connectSocket, disconnectSocket } from "../lib/socket";
 
-const useAuthStore = create((set, get) => ({
+const useAuthStore = create((set) => ({
   authUser: null,
   isSigningUp: false,
   isLoggingIn: false,
@@ -11,14 +11,11 @@ const useAuthStore = create((set, get) => ({
   isCheckingAuth: true,
   onlineUsers: [],
 
-  // Callback passed to socket — updates onlineUsers state when server broadcasts
-  _onOnlineUsers: (users) => set({ onlineUsers: users }),
-
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check");
       set({ authUser: res.data });
-      connectSocket(res.data._id, get()._onOnlineUsers);
+      connectSocket(res.data._id);
     } catch (error) {
       console.log("Not authenticated");
       set({ authUser: null });
@@ -34,7 +31,7 @@ const useAuthStore = create((set, get) => ({
       if (res.data.token) localStorage.setItem("wavechat_token", res.data.token);
       set({ authUser: res.data });
       toast.success("Welcome to WaveChat! 🌊");
-      connectSocket(res.data._id, get()._onOnlineUsers);
+      connectSocket(res.data._id);
     } catch (error) {
       toast.error(error.response?.data?.message || "Signup failed");
     } finally {
@@ -49,7 +46,7 @@ const useAuthStore = create((set, get) => ({
       if (res.data.token) localStorage.setItem("wavechat_token", res.data.token);
       set({ authUser: res.data });
       toast.success("Welcome back! 🌊");
-      connectSocket(res.data._id, get()._onOnlineUsers);
+      connectSocket(res.data._id);
     } catch (error) {
       toast.error(error.response?.data?.message || "Login failed");
     } finally {

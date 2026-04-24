@@ -1,17 +1,10 @@
 import { io } from "socket.io-client";
 
 let socket = null;
-let onlineUsersCallback = null;
 
-export const connectSocket = (userId, onOnlineUsers) => {
-  // Store callback to update online users
-  if (onOnlineUsers) onlineUsersCallback = onOnlineUsers;
-
-  // If already connected, just request fresh online users
-  if (socket?.connected) {
-    socket.emit("requestOnlineUsers");
-    return;
-  }
+export const connectSocket = (userId) => {
+  // If already connected, do nothing
+  if (socket?.connected) return;
 
   const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -26,22 +19,8 @@ export const connectSocket = (userId, onOnlineUsers) => {
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionAttempts: 10,
-    // Allow polling fallback for environments that block WebSocket upgrades
+    // Allow polling fallback for Render environments
     transports: ["websocket", "polling"],
-  });
-
-  // On successful connection, set up listeners and request online users
-  socket.on("connect", () => {
-    console.log("✅ Socket connected:", socket.id);
-
-    // Listen for online users
-    socket.off("getOnlineUsers");
-    socket.on("getOnlineUsers", (users) => {
-      if (onlineUsersCallback) onlineUsersCallback(users);
-    });
-
-    // Request current online users (avoids missing the initial broadcast)
-    socket.emit("requestOnlineUsers");
   });
 
   socket.on("connect_error", (err) => {
@@ -55,7 +34,6 @@ export const disconnectSocket = () => {
   if (socket) {
     socket.disconnect();
     socket = null;
-    onlineUsersCallback = null;
   }
 };
 
