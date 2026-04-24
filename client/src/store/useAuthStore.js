@@ -41,6 +41,8 @@ const useAuthStore = create((set, get) => ({
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", data);
+      // Save token for cross-origin Bearer auth
+      if (res.data.token) localStorage.setItem("wavechat_token", res.data.token);
       set({ authUser: res.data });
       toast.success("Welcome to WaveChat! 🌊");
       connectSocket(res.data._id);
@@ -56,6 +58,8 @@ const useAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
+      // Save token for cross-origin Bearer auth
+      if (res.data.token) localStorage.setItem("wavechat_token", res.data.token);
       set({ authUser: res.data });
       toast.success("Welcome back! 🌊");
       connectSocket(res.data._id);
@@ -70,10 +74,12 @@ const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       await axiosInstance.post("/auth/logout");
+      localStorage.removeItem("wavechat_token"); // Clear stored token
       set({ authUser: null, onlineUsers: [] });
       toast.success("Logged out successfully");
       disconnectSocket();
     } catch (error) {
+      localStorage.removeItem("wavechat_token");
       toast.error("Logout failed");
     }
   },
