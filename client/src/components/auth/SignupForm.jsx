@@ -91,7 +91,7 @@ const SignupForm = ({ onSwitch }) => {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full glass-input rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder-zinc-600 focus:ring-0"
-              placeholder="e.g. John Doe"
+              placeholder="Name"
               required
             />
           </div>
@@ -106,10 +106,9 @@ const SignupForm = ({ onSwitch }) => {
               type="text"
               value={formData.waveId}
               onChange={handleWaveIdChange}
-              className={`w-full glass-input rounded-xl py-3 pl-11 pr-10 text-sm text-white placeholder-zinc-600 focus:ring-0 ${
-                waveIdStatus === "available" ? "border-emerald-500/40" : waveIdStatus === "taken" ? "border-red-500/40" : ""
-              }`}
-              placeholder="e.g. john_doe"
+              className={`w-full glass-input rounded-xl py-3 pl-11 pr-10 text-sm text-white placeholder-zinc-600 focus:ring-0 ${waveIdStatus === "available" ? "border-emerald-500/40" : waveIdStatus === "taken" ? "border-red-500/40" : ""
+                }`}
+              placeholder="Wave I'D"
               required
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2">

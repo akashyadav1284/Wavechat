@@ -6,10 +6,24 @@ import User from "../models/User.model.js";
 const app = express();
 const server = http.createServer(app);
 
+// Parse comma-separated CLIENT_URL for multi-origin support
+// e.g. "http://localhost:5173,https://wavechat-bay.vercel.app"
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Socket CORS blocked: ${origin}`));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST"],
   },
 });
 
