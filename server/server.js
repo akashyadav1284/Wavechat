@@ -18,30 +18,40 @@ const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 5000;
 
-// Allowed origins — comma-separated CLIENT_URL env var
-// e.g. "http://localhost:5173,https://wavechat-bay.vercel.app"
-const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+// Explicit origins from env var (comma-separated)
+const explicitOrigins = (process.env.CLIENT_URL || "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (Postman, mobile apps, server-to-server)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    console.warn(`CORS blocked origin: ${origin}`);
-    return callback(new Error(`CORS blocked: ${origin}`));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Allow no-origin requests (Postman, curl)
+  if (explicitOrigins.includes(origin)) return true; // Explicit whitelist
+  if (/\.vercel\.app$/.test(origin)) return true; // Any Vercel preview/prod URL
+  if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return true; // Any localhost port
+  return false;
 };
 
-// Middleware
+console.log("🔒 CORS explicit origins:", explicitOrigins);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`🚫 CORS blocked: ${origin}`);
+      callback(new Error(`CORS blocked: ${origin}`));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With"],
+};
+
+// Apply CORS to all routes (must be FIRST middleware)
 app.use(cors(corsOptions));
 
-// Handle OPTIONS preflight requests for all routes
+// Explicitly handle OPTIONS preflight for all routes
 app.options("*", cors(corsOptions));
 
 app.use(express.json({ limit: "5mb" }));

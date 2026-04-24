@@ -6,17 +6,24 @@ import User from "../models/User.model.js";
 const app = express();
 const server = http.createServer(app);
 
-// Parse comma-separated CLIENT_URL for multi-origin support
-// e.g. "http://localhost:5173,https://wavechat-bay.vercel.app"
-const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+// Smart origin checker — same logic as server.js
+const explicitOrigins = (process.env.CLIENT_URL || "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (explicitOrigins.includes(origin)) return true;
+  if (/\.vercel\.app$/.test(origin)) return true; // any Vercel URL
+  if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return true;
+  return false;
+};
+
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (isAllowedOrigin(origin)) {
         callback(null, true);
       } else {
         callback(new Error(`Socket CORS blocked: ${origin}`));
